@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>2021计算机图形学实验脚手架-张友华编写</title>
+    <script src="dom.min.js"></script>
+    <script src="exp.js"></script>
+    <script src="http://www.joyzhang.site/imageLoading.js"></script>
+
+</head>
+
+<body onmousedown="mouseListener(event)">
+    <div class="bt-div" style="width: 500px;position:relative;float: left">
+        <input type="button" value="清空画布" onclick="clearWorkArea()">
+        <hr>
+        <p style="font-size:13px">在画布中点击若干个点，然后选择对应的直线段扫描算法</p>
+        <input type="button" value="DDA画直线" onclick="useDrawLine(0)">
+        <input type="button" value="Bresenhamline画直线" onclick="useDrawLine(1)">
+        <input type="button" value="改进的Bresenhamline画直线" onclick="useDrawLine(2)">
+        <hr>
+        <p style="font-size:13px">在画布内用鼠标创建若干个点，然后将其转换为点阵表示的多边形</p>
+        <input type="button" value="扫描线算法：将扫描线转换为多边形" onclick="usePolyFill('#ff0000')">
+        <input type="button" value="种子递归的区域填充" onclick="useFloodFill4()">
+        <hr>
+        <p style="font-size:13px">在画布内用鼠标创建若干个点，最后一个点会作为待判断的点</p>
+        <input type="button" value="弧长累进算法：判断点与多边形关系" onclick="usePointPosition()">
+        <hr>
+        <p style="font-size:13px">先使用扫描线算法创建一个多边形，再在画布内点击一个点</p>
+        <input type="button" value="De Casteljau算法：二阶Bezier曲线的实现" onclick="useDoubleBezier()">
+        <hr>
+        <p style="font-size:13px">颜色模型实验</p>
+        <input type="button" value="三原色显示：RGB模型" onclick="showRGB()">
+        <input type="button" value="图像灰度化和图像融合" onclick="showRGB()">
+        <br />
+        <hr>
+        <p style="font-size:13px">三维物体实验</p>
+        <input type="button" value="Three.js：构建一个魔方" onclick="useThree()">
+        <br />
+        
+    </div>
+    <div id="tip" style="position:relative;float: left;margin-left: 100px;margin-top: 20px;"></div>
+</body>
+
+</html>
