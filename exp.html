@@ -6,7 +6,6 @@
     <title>2021计算机图形学实验脚手架-张友华编写</title>
     <script src="dom.min.js"></script>
     <script src="exp.js"></script>
-    <script src="http://www.joyzhang.site/imageLoading.js"></script>
 
 </head>
 
@@ -20,7 +19,7 @@
         <input type="button" value="改进的Bresenhamline画直线" onclick="useDrawLine(2)">
         <hr>
         <p style="font-size:13px">在画布内用鼠标创建若干个点，然后将其转换为点阵表示的多边形</p>
-        <input type="button" value="扫描线算法：将扫描线转换为多边形" onclick="usePolyFill('#ff0000')">
+        <input type="button" value="扫描线算法:将扫描线转换为多边形" onclick="useScanPolyFill()">
         <input type="button" value="种子递归的区域填充" onclick="useFloodFill4()">
         <hr>
         <p style="font-size:13px">在画布内用鼠标创建若干个点，最后一个点会作为待判断的点</p>
@@ -31,7 +30,7 @@
         <hr>
         <p style="font-size:13px">颜色模型实验</p>
         <input type="button" value="三原色显示：RGB模型" onclick="showRGB()">
-        <input type="button" value="图像灰度化和图像融合" onclick="showRGB()">
+        <input type="button" value="图像灰度化和图像融合" onclick="useDrawImage()">
         <br />
         <hr>
         <p style="font-size:13px">三维物体实验</p>

@@ -4,64 +4,169 @@ var workW = 800,
 var posX = 600,
     posY = 100;
 var pointsArray = new Array(); //存储点
-var ymin = 10000;
-var ymax = 0;
+
 var fillColor = "#ff0000"; //填充颜色，待解决：十进制转换十六进制中的位数丢失问题
-var grayingColor = "#999999";
 
 function main() {
     initWorkArea(workW, workH, posX, posY, "#000000");
 }
 
+//直线段扫描填充
+function useScanPolyFill() {
+	var ymin, ymax;
+	var rct = calcRect(pointsArray);
+	var lines = [];
+	ymin = rct[1];
+	ymax = rct[3];
 
-function useThree(){
-    window.location.href='three.html';
+	var cnt = pointsArray.length;
+	for (var i = 0; i < cnt - 1; i++) {
+		lines.push([{
+			x: pointsArray[i].x,
+			y: pointsArray[i].y
+		}, {
+			x: pointsArray[i + 1].x,
+			y: pointsArray[i + 1].y
+		}]);
+	}
+	lines.push([{
+		x: pointsArray[cnt - 1].x,
+		y: pointsArray[cnt - 1].y
+	}, {
+		x: pointsArray[0].x,
+		y: pointsArray[0].y
+	}]);
+
+	var xroot = [],
+		xr;
+	lncnt = lines.length;
+	for (var y = ymin; y < ymax; y++) {
+		for (var i = 0; i < lncnt; i++) {
+			if (judgeCross(lines[i], y)) {
+				xr = getXRoot(lines[i], y);
+				xroot.push(Math.round(xr));
+			}
+		}
+		xroot.sort(function(a, b) {
+			return a - b
+		}); //数值数组通过比值函数升序排列，改为 return b-a则为降序
+		if (xroot.length >= 3 && xroot.length % 2 == 1) {
+			xroot = distinct(xroot);
+		}
+		var segcnt = int(xroot.length / 2);
+		for (var i = 0; i < segcnt; i++) {
+			BresenhamLine(xroot[i * segcnt], y, xroot[i * segcnt + 1], y, fillColor);
+		}
+		xroot.length = 0;
+	}
+}
+//数组去重
+function distinct(arr) {
+	return Array.from(new Set(arr))
+}
+function getXRoot(ln, y) {
+	x0 = ln[0].x, y0 = ln[0].y;
+	x1 = ln[1].x, y1 = ln[1].y;
+	if (x1 == x0) {
+		return x0;
+	}
+	k = (y1 - y0) / (x1 - x0);
+	b = y0 - k * x0;
+	x = (y - b) / k;
+	return x;
+}
+function judgeCross(myln, lny) {
+	p0y = myln[0].y;
+	p1y = myln[1].y;
+	if ((p0y - lny) * (p1y - lny) <= 0) {
+		return true;
+	}
+	return false;
+}
+function calcRect(poly) {
+	cnt = poly.length;
+	xmin = 10000, xmax = -10000, ymin = 10000, ymax = -10000;
+	for (i = 0; i < cnt; i++) {
+		x = poly[i].x;
+		y = poly[i].y;
+		if (x < xmin) {
+			xmin = x;
+		}
+		if (y < ymin) {
+			ymin = y;
+		}
+		if (x >= xmax) {
+			xmax = x;
+		}
+		if (y >= ymax) {
+			ymax = y;
+		}
+	}
+	return [xmin, ymin, xmax, ymax];
 }
 
 
-//利用圆的方程画出一个正方形的内切圆，根据每个点的所属范围进行不同的涂色
+
+
+
+
+
+
+
+
+
+
+//三维设计实验
+function useThree() {
+    window.location.href = 'three.html';
+}
+//图像灰度哈和图像融合
+function useDrawImage() {
+    document.querySelector("#tip").innerHTML = "页面放在一个远程的服务器上，但是不排除网络问题导致无法访问"
+    window.location.href = 'https://joyzhang20.github.io/txxlab/drawimage.html';
+}
+
+//RGB三原色：利用圆的方程画出一个正方形的内切圆，根据每个点的所属范围进行不同的涂色
 function showRGB() {
     for (var i = 200; i <= 400; i++) {
         for (var j = 200; j <= 400; j++) {
-            if (isInCilrcle(100, 300, 300, i, j))
+            if (isInCircle(100, 300, 300, i, j))
                 setPixel(i, j, "#00ff00");
         }
     }
     for (var i = 300; i <= 500; i++) {
         for (var j = 200; j <= 400; j++) {
-            if (isInCilrcle(100, 400, 300, i, j) && isInCilrcle(100, 300, 300, i, j)) {
+            if (isInCircle(100, 400, 300, i, j) && isInCircle(100, 300, 300, i, j)) {
                 setPixel(i, j, "#00ffff");
-            } else if (isInCilrcle(100, 400, 300, i, j)) {
+            } else if (isInCircle(100, 400, 300, i, j)) {
                 setPixel(i, j, "#0000ff");
             }
         }
     }
     for (var i = 250; i <= 450; i++) {
         for (var j = 300; j <= 500; j++) {
-            if (isInCilrcle(100, 350, 400, i, j) && isInCilrcle(100, 400, 300, i, j) && isInCilrcle(100, 300, 300, i, j)) {
+            if (isInCircle(100, 350, 400, i, j) && isInCircle(100, 400, 300, i, j) && isInCircle(100, 300, 300, i, j)) {
                 setPixel(i, j, "#ffffff");
-            } else if (isInCilrcle(100, 350, 400, i, j) && isInCilrcle(100, 400, 300, i, j)) {
+            } else if (isInCircle(100, 350, 400, i, j) && isInCircle(100, 400, 300, i, j)) {
                 setPixel(i, j, "#ff00ff");
-            } else if (isInCilrcle(100, 350, 400, i, j) && isInCilrcle(100, 300, 300, i, j)) {
+            } else if (isInCircle(100, 350, 400, i, j) && isInCircle(100, 300, 300, i, j)) {
                 setPixel(i, j, "#ffff00");
-            } else if (isInCilrcle(100, 350, 400, i, j)) {
+            } else if (isInCircle(100, 350, 400, i, j)) {
                 setPixel(i, j, "#ff0000");
             }
         }
     }
-
-
 }
 //利用圆的方程来判断点(x,y)是否在原点为(x0,y0)半径为r的圆内
-function isInCilrcle(r, x0, y0, x, y) {
+function isInCircle(r, x0, y0, x, y) {
     return (x - x0) * (x - x0) + (y - y0) * (y - y0) <= r * r ? 1 : 0
 }
 
 //调用二阶贝塞尔算法，画出对应曲线
 function useDoubleBezier() {
-    for (var j = 0.001; j < 1; j += 0.001) {
+    for (var j = 0.01; j < 1; j += 0.01) {
         setPixel(doubleBezier(j, pointsArray[0], pointsArray[1], pointsArray[2]).x, doubleBezier(j, pointsArray[0],
-            pointsArray[1], pointsArray[2]).y, "#ff0000", 2);
+            pointsArray[1], pointsArray[2]).y, fillColor, 2);
     }
 }
 
@@ -75,9 +180,7 @@ function doubleBezier(t, p0, p1, p2) {
     }
 }
 
-
-//待完善：点在多边形边界，能否判断出来？
-//弧长累进算法：判断点与多边形关系，顺时针或逆时针皆可
+//弧长累进算法：判断点与多边形关系，最后一个点作为待判断的点，顺时针或逆时针皆可
 function usePointPosition() {
     var originX = pointsArray[pointsArray.length - 1].x; //以最后一个点作为原点，建立坐标系，判断其余点的象限
     var originY = pointsArray[pointsArray.length - 1].y;
@@ -85,33 +188,27 @@ function usePointPosition() {
     var pointsQuadrant = new Array(); //存储点的象限信息
     for (var i = 0; i < pointsArray.length - 1; i++) { //遍历点获取每个点的象限
         pointsQuadrant[i] = getQuadrant(originX, originY, pointsArray[i].x, pointsArray[i].y)
-        // console.log("第" + i + "次象限为" + pointsQuadrant[i]);
     }
     for (var i = 0; i < pointsArray.length - 1; i++) { //遍历每两个点，计算两者间象限的差值
         var quadrantDiff = (pointsQuadrant[(i + 1) % (pointsArray.length - 1)] - pointsQuadrant[i] + 4) % 4; //保证循环的安全及象限差值的合法性
-        // console.log("quadrantDiff=" + quadrantDiff);
         if (quadrantDiff == 0) { //对象限差值的不同情况进行累计弧长
             arcLength += 0;
         } else if (quadrantDiff == 1) {
             arcLength += Math.PI / 2;
         } else if (quadrantDiff == 3) {
             arcLength -= (Math.PI / 2);
-        } else if (quadrantDiff == 2) { //差值为2时需要一些额外的判断
+        } else if (quadrantDiff == 2) { //差值为2时需要进行进一步的判断
             var f = ((pointsArray[(i + 1) % (pointsArray.length - 1)].y - originY) * (pointsArray[i].x - originX)) - //注意是相对于原点的x、y作运算
                 ((pointsArray[(i + 1) % (pointsArray.length - 1)].x - originX) * (pointsArray[i].y - originY));
-            // console.log("f=" + f);
-            // console.log(pointsArray[i].x + "," + pointsArray[i].y + "," + pointsArray[(i + 1) % (pointsArray.length - 1)].x + "," + pointsArray[(i + 1) % (pointsArray.length - 1)].y);
             if (f > 0) {
                 arcLength += Math.PI;
             } else if (f < 0) {
                 arcLength -= Math.PI;
             }
         }
-        // console.log("第" + i + "次的arclenth为" + arcLength);
     }
     var result = ""
     arcLength = Math.abs(arcLength) //取绝对值以实现不同方向的判断
-    // console.log("最终的arcLenth=" + arcLength);
     if (arcLength == 0) {
         result = "被检测点不在多边形内";
     } else if (arcLength == Math.PI) {
@@ -140,7 +237,6 @@ function getQuadrant(originX, originY, pointX, pointY) {
     return pointQuadrant
 }
 
-
 //调用区域填充算法
 function useFloodFill4() {
     document.querySelector("#tip").innerHTML = "算法可能需要一些时间，请等待不要额外的操作，完成后会在此处提示"
@@ -156,7 +252,7 @@ function useFloodFill4() {
 //区域填充：内点表示的四联通区域种子递归填充
 function floodFill4(x, y, oldColor, newColor) {
     var step = 8; //递归填充的步长，最小为1，值越小需要越多的性能
-    if (getPixel(x, y) == oldColor) {
+    if (getPixelHex(x, y) == oldColor) {
         setPixel(x, y, newColor);
         floodFill4(x, y + step, oldColor, newColor);
         floodFill4(x, y - step, oldColor, newColor);
@@ -168,8 +264,8 @@ function floodFill4(x, y, oldColor, newColor) {
 function clearWorkArea() {
     initWorkArea(workW, workH, posX, posY, "#000000");
     isRight = true;
-    ymin = 10000;
-    ymax = 0;
+    yMin = 10000;
+    yMax = 0;
     pointsArray = new Array();
     pointsArray.length = 0;
     linesArray = new Array();
@@ -183,9 +279,9 @@ function useDrawLine(pos) {
     if (pos == 0) {
         line = DDALine
     } else if (pos == 1) {
-        line = Bresenhamline
+        line = BresenhamLine
     } else {
-        line = IntergerBresenhamline
+        line = IntergerBresenhamLine
     }
     if (pointsArray.length > 2) {
         for (var i = 0; i < pointsArray.length; i++) {
@@ -197,7 +293,7 @@ function useDrawLine(pos) {
 }
 
 
-//鼠标监听，每次点击鼠标，记录下点击的位置，存在points中
+//鼠标监听，每次点击鼠标，记录下点击的位置，存在pointsArray[]中
 function mouseListener(event) {
     var x = event.clientX + (document.body.scrollLeft || document.documentElement.scrollLeft) - posX
     var y = workH - (event.clientY + (document.body.scrollTop || document.documentElement.scrollTop) - posY)
@@ -207,174 +303,14 @@ function mouseListener(event) {
             x: x,
             y: y
         }
-        if (y > ymax) {
-            ymax = y;
-        }
-        if (y < ymin) {
-            ymin = y;
-        }
         pointsArray[pointsArray.length] = pointObj;
     }
 
 }
-//扫描线算法：将扫描线转换为多边形
-function usePolyFill(polyFillColor) {
-
-    var linesArray = new Array(); //把所有的边打个标号放入
-    var linesCount = 0;
-
-    var next = new Array(); //Lines[next[i]]:即为下一条边
-    var head = -1; //活动边表的头
-    DDALine(pointsArray[0].x, pointsArray[0].y, pointsArray[pointsArray.length - 1].x, pointsArray[pointsArray.length - 1].y, polyFillColor);
-    //定义一个新边表（NET）
-    var slNet = new Array(ymax - ymin + 1);
-    for (var i = 0; i < slNet.length; i++)
-        slNet[i] = []; //生成二维数组
-    //初始化新边表
-    InitNET();
-    //进行扫描线填充
-    ProcessScanLineFill(polyFillColor);
-    /*-----------END----------*/
-    function InitNET() {
-        for (var i = 0; i < pointsArray.length; i++) {
-            var e = new tagEdge();
-            e.id = linesCount++;
-            e.isIn = false;
-            var L_start = pointsArray[i]; //边的第一个顶点
-            var L_end = pointsArray[(i + 1) % pointsArray.length]; //边的第二个顶点
-            var L_start_pre = pointsArray[(i - 1 + pointsArray.length) % pointsArray.length]; //第一个顶点前面的点
-            var L_end_next = pointsArray[(i + 2) % pointsArray.length]; //第二个顶点后面的点
-            if (L_end.y != L_start.y) { //跳过水平线
-                e.dx = (L_end.x - L_start.x) / (L_end.y - L_start.y); //1/k
-                if (L_end.y > L_start.y) {
-                    e.xi = L_start.x;
-                    if (L_end_next.y >= L_end.y) {
-                        e.ymax = L_end.y - 1;
-                    } else e.ymax = L_end.y;
-
-                    slNet[L_start.y - ymin].push(e);
-                } else {
-                    e.xi = L_end.x;
-                    if (L_start_pre.y >= L_start.y) {
-                        e.ymax = L_start.y - 1;
-                    } else e.ymax = L_start.y;
-
-                    slNet[L_end.y - ymin].push(e);
-                }
-                linesArray.push(e);
-            }
-        }
-        var tp = new tagEdge(); //javascript中不允许数组为空，因此这里填入一个空边
-        for (var i = 0; i < slNet.length; i++) {
-            slNet[i].push(tp);
-        }
-
-    }
-
-    function ProcessScanLineFill(polyFillColor) {
-        //初始化活动边表的信息
-        head = -1;
-        for (var i = 0; i < linesArray.length; i++)
-            next[i] = -1;
-        /*----开始扫描线算法---*/
-        for (var y = ymin; y <= ymax; y++) {
-            insert(y - ymin); //插入新边
-            for (var i = head; i != -1; i = next[next[i]]) { //绘制该扫描线
-                if (next[i] != -1) {
-                    // drawLine(Lines[i].xi, y, Lines[next[i]].xi, y);
-                    DDALine(linesArray[i].xi, y, linesArray[next[i]].xi, y, polyFillColor);
-                }
-            }
-            remove(y); //删除非活动边
-            update_AET(); //更新活动边表中每项的xi值，并根据xi重新排序
-        }
-        /*----END扫描线算法---*/
 
 
-        /*----扫描线算法所需的函数---*/
-        //删除非活动边
-        function remove(y) {
-            var pre = head;
-            while (head != -1 && linesArray[head].ymax == y) {
-                linesArray[head].isIn = false;
-                head = next[head];
-                next[pre] = -1;
-                pre = head;
-            }
-            if (head == -1) return;
-            var nxt = next[head];
-            for (var i = nxt; i != -1; i = nxt) {
-                nxt = next[i];
-                if (linesArray[i].ymax == y) {
-                    next[pre] = next[i];
-                    linesArray[i].isIn = false;
-                    next[i] = -1;
-                } else pre = i;
-            }
-        }
-
-        //更新活动边表中每项的xi值，并根据xi重新排序
-        function update_AET() {
-            for (var i = head; i != -1; i = next[i]) {
-                linesArray[i].xi += linesArray[i].dx;
-            }
-            //按照冒泡排序的思想O(n)重新排序
-            if (head == -1) return;
-            if (next[head] == -1) return;
-            var pre = head;
-            if (linesArray[head].xi > linesArray[next[head]].xi) {
-                head = next[head];
-                next[pre] = next[head];
-                next[head] = pre;
-                pre = head;
-            }
-            var j = next[head];
-            for (var i = j; i != -1; i = j) {
-                j = next[i];
-                if (j == -1) break;
-                if (linesArray[i].xi > linesArray[next[i]].xi) {
-                    next[pre] = next[i];
-                    next[i] = next[next[i]];
-                    next[j] = i;
-                } else pre = i;
-            }
-        }
-
-        //将扫描线对应的所有新边插入到AET中
-        function insert(y) {
-            for (var i = 0; i < slNet[y].length; i++) {
-                var temp = slNet[y][i];
-
-                if (temp.ymax == 0 && temp.dx == 0) break;
-
-                if (head == -1) {
-                    head = temp.id;
-                } else {
-                    if (temp.xi < linesArray[head].xi) {
-                        next[temp.id] = head;
-                        head = temp.id;
-                    } else {
-                        var pre = head;
-                        for (var j = next[head]; ; j = next[j]) {
-                            if (j == -1 || temp.xi < linesArray[j].xi) {
-                                next[pre] = temp.id;
-                                next[temp.id] = j;
-                                break;
-                            }
-                            pre = j;
-                        }
-                    }
-                }
-                temp.isIn = true;
-            }
-        }
-
-    }
-}
-
-
-
-function DDALine(x0, y0, x1, y1, color) { //DDA转换，能够实现任意斜率的直线段转换
+//DDA扫描转换算法，能够实现任意斜率的直线段转换
+function DDALine(x0, y0, x1, y1, color) {
     var x, y, dx, dy, k, temp;
     dx = x1 - x0, dy = y1 - y0;
     k = dy / dx;
@@ -408,39 +344,63 @@ function DDALine(x0, y0, x1, y1, color) { //DDA转换，能够实现任意斜率
         }
     }
 }
-
-
-
-function Bresenhamline(x0, y0, x1, y1, color) {
+//Bresenham扫描线转换，能够实现任意斜率的直线段转换
+function BresenhamLine(x0, y0, x1, y1, color) {
     var x, y, dx, dy;
     var k, e;
-    dx = x1 - x0, dy = y1 - y0, k = dy / dx;
+    var xIncrement = (x1 - x0) > 0 ? 1 : -1;//根据dx的符号来判断x每次的增量是1还是-1
+    var yIncrement = (y1 - y0) > 0 ? 1 : -1;//根据dy的符号来判断y每步的增量是1还是-1
+    dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), k = dy / dx;
     e = -0.5, x = x0, y = y0;
-    for (var i = 0; i <= dx; i++) {
-        setPixel(x, y, color);
-        x = x + 1, e = e + k;
-        if (e >= 0) {
-            y++;
-            e = e - 1;
+    if (k < 1) {//斜率k小于1的时候，遍历x，根据e的符号来判断是否增加y
+        for (var i = 0; i <= dx; i++) {
+            setPixel(x, y, color);
+            x = x + xIncrement, e = e + k;
+            if (e >= 0) {
+                y = y + yIncrement;
+                e = e - 1;
+            }
         }
     }
-
+    else {//斜率k大于1的时候，遍历y，根据e的符号来判断是否增加x
+        k = 1 / k;
+        for (var i = 0; i <= dy; i++) {
+            setPixel(x, y, color);
+            y = y + yIncrement, e = e + k;
+            if (e >= 0) {
+                x = x + xIncrement;
+                e = e - 1;
+            }
+        }
+    }
 }
-
-function IntergerBresenhamline(x0, y0, x1, y1, color) {
+//Bresenham改进扫描线转换：使用整数替代浮点运算
+function IntergerBresenhamLine(x0, y0, x1, y1, color) {
     var x, y, dx, dy, e;
-    dx = x1 - x0, dy = y1 - y0;
+    var xIncrement = (x1 - x0) > 0 ? 1 : -1;//根据dx的符号来判断x每次的增量是1还是-1
+    var yIncrement = (y1 - y0) > 0 ? 1 : -1;//根据dy的符号来判断y每步的增量是1还是-1
+    dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
     e = -dx, x = x0, y = y0;
-    for (var i = 0; i <= dx; i++) {
-        setPixel(x, y, color);
-        x++;
-        e = e + 2 * dy;
-        if (e >= 0) {
-            y++;
-            e = e - 2 * dx;
+    if ((dy / dx) < 1) {//斜率k小于1的时候，遍历x，根据e的符号来判断是否增加y
+        for (var i = 0; i <= dx; i++) {
+            setPixel(x, y, color);
+            x = x + xIncrement, e = e + 2 * dy;;
+            if (e >= 0) {
+                y = y + yIncrement;
+                e = e - 2 * dx;
+            }
         }
     }
-
+    else {//斜率k大于1的时候，遍历y，根据e的符号来判断是否增加x
+        for (var i = 0; i <= dy; i++) {
+            setPixel(x, y, color);
+            y = y + yIncrement, e = e + 2 * dx;
+            if (e >= 0) {
+                x = x + xIncrement;
+                e = e - 2 * dy;
+            }
+        }
+    }
 }
 
 //以下代码无需改动，用于构建一个基本的工作环境，调用initWorkArea()函数即可，5个参数分别代表工作区的宽度，高度，左上角位置（x,y）和背景颜色
@@ -459,33 +419,12 @@ function setPixel(x, y, color, size) {
     point(x, workH - y);
 }
 
-function getPixel(x, y) {
+function getPixelHex(x, y) {//返回像素颜色的hex值
     var clr;
     clr = get(x, workH - y);
-    return [clr[0], clr[1], clr[2], clr[3]];
-}
-
-function getPixel2(x, y) {
-    var clr;
-    clr = get(x, workH - y);
-    // return [clr[0], clr[1], clr[2], clr[3]];
     var pixelColor = "#";
     for (var i = 0; i < 3; i++) {
         var temp = clr[i].toString(16)
-        // console.log(temp.length);
-        if (temp.length < 2) {
-            temp = "0" + temp;
-        }
-        pixelColor += temp
-    }
-    return pixelColor
-}
-
-function switchColorForm(clr) {
-    var pixelColor = "#";
-    for (var i = 0; i < 3; i++) {
-        var temp = clr[i].toString(16)
-        // console.log(temp.length);
         if (temp.length < 2) {
             temp = "0" + temp;
         }
@@ -520,7 +459,7 @@ function setup() {
 
 function tagEdge() {
     this.xi = 0;
-    this.dx = 0; //  1/k
+    this.dx = 0;
     this.ymax = 0;
     this.id = 0;
     this.isIn = false;
