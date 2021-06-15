@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <script>
+        var fusionProportion = 0.3;//图像融合占比
         function imageFusion() {
+            fusionProportion = (fusionProportion + 0.2) % 1;
             var canvas1 = document.getElementById("myCanvas1");
             var image1 = document.getElementById("imageSource1");
             canvas1.width = image1.width;
@@ -11,8 +13,6 @@
             var context = canvas1.getContext("2d");
             context.drawImage(image1, 0, 0);
             var canvasData = context.getImageData(0, 0, 500, 300);
-
-
             var canvas2 = document.getElementById("myCanvas2");
             var image2 = document.getElementById("imageSource2");
             canvas2.width = image2.width;
@@ -26,9 +26,9 @@
                 for (var y = 0; y < canvasData.height; y++) {
                     // Index of the pixel in the array  
                     var idx = (x + y * canvasData.width) * 4;
-                    var r = canvasData.data[idx + 0]*0.5+canvasData2.data[idx + 0]*0.5;
-                    var g = canvasData.data[idx + 1]*0.5+canvasData2.data[idx + 1]*0.5;
-                    var b = canvasData.data[idx + 2]*0.5+canvasData2.data[idx + 2]*0.5;
+                    var r = canvasData.data[idx + 0] * fusionProportion + canvasData2.data[idx + 0] * (1 - fusionProportion);
+                    var g = canvasData.data[idx + 1] * fusionProportion + canvasData2.data[idx + 1] * (1 - fusionProportion);
+                    var b = canvasData.data[idx + 2] * fusionProportion + canvasData2.data[idx + 2] * (1 - fusionProportion);
                     canvasData.data[idx + 0] = r; // Red channel  
                     canvasData.data[idx + 1] = g; // Green channel  
                     canvasData.data[idx + 2] = b; // Blue channel  
@@ -36,8 +36,7 @@
                 }
             }
             context.putImageData(canvasData, 0, 0); // at coords 0,0
-            document.querySelector("#delete").innerHTML=""
-
+            document.querySelector("#second").innerHTML = ""
         }
 
         //图像灰度化
@@ -72,14 +71,14 @@
 <body>
     <img id='imageSource1' src='image1.jpg' alt='Canvas Source'>
     <img id='imageSource2' src='image2.jpg' alt='Canvas Source'>
-    <br/>
+    <br />
     <input type="button" onclick="imageGraying()" value="图像灰度化">
-    <input type="button" onclick="imageFusion()" value="图像融合">
-    <br/>
+    <input type="button" onclick="imageFusion()" value="图像融合度+">
+    <br />
     <canvas id="myCanvas1">Gray Filter</canvas>
-    <div id="delete">
-    <canvas id="myCanvas2">Gray Filter</canvas>
-</div>
+    <div id="second">
+        <canvas id="myCanvas2">Gray Filter</canvas>
+    </div>
 
 </body>
 
