@@ -11,111 +11,6 @@ function main() {
     initWorkArea(workW, workH, posX, posY, "#000000");
 }
 
-//直线段扫描填充
-function useScanPolyFill() {
-	var ymin, ymax;
-	var rct = calcRect(pointsArray);
-	var lines = [];
-	ymin = rct[1];
-	ymax = rct[3];
-
-	var cnt = pointsArray.length;
-	for (var i = 0; i < cnt - 1; i++) {
-		lines.push([{
-			x: pointsArray[i].x,
-			y: pointsArray[i].y
-		}, {
-			x: pointsArray[i + 1].x,
-			y: pointsArray[i + 1].y
-		}]);
-	}
-	lines.push([{
-		x: pointsArray[cnt - 1].x,
-		y: pointsArray[cnt - 1].y
-	}, {
-		x: pointsArray[0].x,
-		y: pointsArray[0].y
-	}]);
-
-	var xroot = [],
-		xr;
-	lncnt = lines.length;
-	for (var y = ymin; y < ymax; y++) {
-		for (var i = 0; i < lncnt; i++) {
-			if (judgeCross(lines[i], y)) {
-				xr = getXRoot(lines[i], y);
-				xroot.push(Math.round(xr));
-			}
-		}
-		xroot.sort(function(a, b) {
-			return a - b
-		}); //数值数组通过比值函数升序排列，改为 return b-a则为降序
-		if (xroot.length >= 3 && xroot.length % 2 == 1) {
-			xroot = distinct(xroot);
-		}
-		var segcnt = int(xroot.length / 2);
-		for (var i = 0; i < segcnt; i++) {
-			BresenhamLine(xroot[i * segcnt], y, xroot[i * segcnt + 1], y, fillColor);
-		}
-		xroot.length = 0;
-	}
-}
-//数组去重
-function distinct(arr) {
-	return Array.from(new Set(arr))
-}
-function getXRoot(ln, y) {
-	x0 = ln[0].x, y0 = ln[0].y;
-	x1 = ln[1].x, y1 = ln[1].y;
-	if (x1 == x0) {
-		return x0;
-	}
-	k = (y1 - y0) / (x1 - x0);
-	b = y0 - k * x0;
-	x = (y - b) / k;
-	return x;
-}
-function judgeCross(myln, lny) {
-	p0y = myln[0].y;
-	p1y = myln[1].y;
-	if ((p0y - lny) * (p1y - lny) <= 0) {
-		return true;
-	}
-	return false;
-}
-function calcRect(poly) {
-	cnt = poly.length;
-	xmin = 10000, xmax = -10000, ymin = 10000, ymax = -10000;
-	for (i = 0; i < cnt; i++) {
-		x = poly[i].x;
-		y = poly[i].y;
-		if (x < xmin) {
-			xmin = x;
-		}
-		if (y < ymin) {
-			ymin = y;
-		}
-		if (x >= xmax) {
-			xmax = x;
-		}
-		if (y >= ymax) {
-			ymax = y;
-		}
-	}
-	return [xmin, ymin, xmax, ymax];
-}
-
-
-
-
-
-
-
-
-
-
-
-
 //三维设计实验
 function useThree() {
     window.location.href = 'three.html';
@@ -125,9 +20,18 @@ function useDrawImage() {
     document.querySelector("#tip").innerHTML = "页面放在一个远程的服务器上，但是不排除网络问题导致无法访问"
     window.location.href = 'https://joyzhang20.github.io/txxlab/drawimage.html';
 }
-
+//鼠标移动监听事件：点击三原色显示按钮后，上方显示当前鼠标位置RGB颜色
+var showRGBFlag = false; //控制是否显示
+function mouseOverListener(event) {
+    var x = event.clientX + (document.body.scrollLeft || document.documentElement.scrollLeft) - posX
+    var y = workH - (event.clientY + (document.body.scrollTop || document.documentElement.scrollTop) - posY)
+    if (x > 0 && x < workH && y > 0 && y < workH && showRGBFlag) { //判断点击位置的合法性
+        document.querySelector("#tip").innerHTML = "当前选中：" + getPixelHex(x, y);
+    }
+}
 //RGB三原色：利用圆的方程画出一个正方形的内切圆，根据每个点的所属范围进行不同的涂色
 function showRGB() {
+    showRGBFlag = true;
     for (var i = 200; i <= 400; i++) {
         for (var j = 200; j <= 400; j++) {
             if (isInCircle(100, 300, 300, i, j))
@@ -157,6 +61,7 @@ function showRGB() {
         }
     }
 }
+
 //利用圆的方程来判断点(x,y)是否在原点为(x0,y0)半径为r的圆内
 function isInCircle(r, x0, y0, x, y) {
     return (x - x0) * (x - x0) + (y - y0) * (y - y0) <= r * r ? 1 : 0
@@ -164,8 +69,8 @@ function isInCircle(r, x0, y0, x, y) {
 
 //调用二阶贝塞尔算法，画出对应曲线
 function useDoubleBezier() {
-    for (var j = 0.01; j < 1; j += 0.01) {
-        setPixel(doubleBezier(j, pointsArray[0], pointsArray[1], pointsArray[2]).x, doubleBezier(j, pointsArray[0],
+    for (var t = 0.01; t < 1; t += 0.01) {
+        setPixel(doubleBezier(t, pointsArray[0], pointsArray[1], pointsArray[2]).x, doubleBezier(t, pointsArray[0],
             pointsArray[1], pointsArray[2]).y, fillColor, 2);
     }
 }
@@ -240,7 +145,7 @@ function getQuadrant(originX, originY, pointX, pointY) {
 //调用区域填充算法
 function useFloodFill4() {
     document.querySelector("#tip").innerHTML = "算法可能需要一些时间，请等待不要额外的操作，完成后会在此处提示"
-    setTimeout(function () {
+    setTimeout(function() {
         var startX = parseInt((pointsArray[0].x + pointsArray[parseInt(pointsArray.length / 2)].x) / 2) //种子点的选取：应尽量选取图形中间的位置，取第一个点和中间位置点的中点
         var startY = parseInt((pointsArray[0].y + pointsArray[parseInt(pointsArray.length / 2)].y) / 2)
         floodFill4(startX, startY, fillColor, "#ffffff")
@@ -253,13 +158,111 @@ function useFloodFill4() {
 function floodFill4(x, y, oldColor, newColor) {
     var step = 8; //递归填充的步长，最小为1，值越小需要越多的性能
     if (getPixelHex(x, y) == oldColor) {
-        setPixel(x, y, newColor);
+        setPixel(x, y, newColor, 2);
         floodFill4(x, y + step, oldColor, newColor);
         floodFill4(x, y - step, oldColor, newColor);
         floodFill4(x - step, y, oldColor, newColor);
         floodFill4(x + step, y, oldColor, newColor);
     }
 }
+
+//直线段扫描填充
+function useScanPolyFill() {
+    var ymin, ymax;
+    var rct = calcRect(pointsArray);
+    var lines = [];
+    ymin = rct[1];
+    ymax = rct[3];
+
+    var cnt = pointsArray.length;
+    for (var i = 0; i < cnt - 1; i++) { //每个点和后面一个点进行配对
+        lines.push([{
+            x: pointsArray[i].x,
+            y: pointsArray[i].y
+        }, {
+            x: pointsArray[i + 1].x,
+            y: pointsArray[i + 1].y
+        }]);
+    }
+    lines.push([{ //最后一个和第一个进行配对
+        x: pointsArray[cnt - 1].x,
+        y: pointsArray[cnt - 1].y
+    }, {
+        x: pointsArray[0].x,
+        y: pointsArray[0].y
+    }]);
+
+    var xroot = [],
+        xr;
+    lncnt = lines.length;
+    for (var y = ymin; y < ymax; y++) { //从ymin开始扫描
+        for (var i = 0; i < lncnt; i++) { //遍历每条边是否和扫描线y相交
+            if (judgeCross(lines[i], y)) {
+                xr = getXRoot(lines[i], y); //xr即交点x坐标,存在xroot中
+                xroot.push(Math.round(xr));
+            }
+        }
+        xroot.sort(function(a, b) {
+            return a - b
+        }); //数值数组通过比值函数升序排列，改为 return b-a则为降序
+        if (xroot.length >= 3 && xroot.length % 2 == 1) { //防止过顶点画不出线的情况
+            xroot = distinct(xroot);
+        }
+        var segcnt = int(xroot.length / 2); //两两成对
+        for (var i = 0; i < segcnt; i++) { //依次划线
+            BresenhamLine(xroot[i * segcnt], y, xroot[i * segcnt + 1], y, fillColor);
+        }
+        xroot.length = 0;
+    }
+}
+//数组去重
+function distinct(arr) {
+    return Array.from(new Set(arr))
+}
+//返回线ln[0],ln[1]与y的交点x坐标
+function getXRoot(ln, y) {
+    x0 = ln[0].x, y0 = ln[0].y;
+    x1 = ln[1].x, y1 = ln[1].y;
+    if (x1 == x0) {
+        return x0;
+    }
+    k = (y1 - y0) / (x1 - x0);
+    b = y0 - k * x0;
+    x = (y - b) / k;
+    return x;
+}
+//判断点lny是否和线myln[0],muln[1]相交
+function judgeCross(myln, lny) {
+    p0y = myln[0].y;
+    p1y = myln[1].y;
+    if ((p0y - lny) * (p1y - lny) <= 0) {
+        return true;
+    }
+    return false;
+}
+//计算多边形的上下左右限
+function calcRect(poly) {
+    cnt = poly.length;
+    xmin = 10000, xmax = -10000, ymin = 10000, ymax = -10000;
+    for (i = 0; i < cnt; i++) {
+        x = poly[i].x;
+        y = poly[i].y;
+        if (x < xmin) {
+            xmin = x;
+        }
+        if (y < ymin) {
+            ymin = y;
+        }
+        if (x >= xmax) {
+            xmax = x;
+        }
+        if (y >= ymax) {
+            ymax = y;
+        }
+    }
+    return [xmin, ymin, xmax, ymax];
+}
+
 //清空画布和存储的各种数据
 function clearWorkArea() {
     initWorkArea(workW, workH, posX, posY, "#000000");
@@ -292,6 +295,10 @@ function useDrawLine(pos) {
     }
 }
 
+var showRGBFlag = false;
+
+
+
 
 //鼠标监听，每次点击鼠标，记录下点击的位置，存在pointsArray[]中
 function mouseListener(event) {
@@ -307,7 +314,6 @@ function mouseListener(event) {
     }
 
 }
-
 
 //DDA扫描转换算法，能够实现任意斜率的直线段转换
 function DDALine(x0, y0, x1, y1, color) {
@@ -348,11 +354,11 @@ function DDALine(x0, y0, x1, y1, color) {
 function BresenhamLine(x0, y0, x1, y1, color) {
     var x, y, dx, dy;
     var k, e;
-    var xIncrement = (x1 - x0) > 0 ? 1 : -1;//根据dx的符号来判断x每次的增量是1还是-1
-    var yIncrement = (y1 - y0) > 0 ? 1 : -1;//根据dy的符号来判断y每步的增量是1还是-1
+    var xIncrement = (x1 - x0) > 0 ? 1 : -1; //根据dx的符号来判断x每次的增量是1还是-1
+    var yIncrement = (y1 - y0) > 0 ? 1 : -1; //根据dy的符号来判断y每步的增量是1还是-1
     dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), k = dy / dx;
     e = -0.5, x = x0, y = y0;
-    if (k < 1) {//斜率k小于1的时候，遍历x，根据e的符号来判断是否增加y
+    if (k < 1) { //斜率k小于1的时候，遍历x，根据e的符号来判断是否增加y
         for (var i = 0; i <= dx; i++) {
             setPixel(x, y, color);
             x = x + xIncrement, e = e + k;
@@ -361,8 +367,7 @@ function BresenhamLine(x0, y0, x1, y1, color) {
                 e = e - 1;
             }
         }
-    }
-    else {//斜率k大于1的时候，遍历y，根据e的符号来判断是否增加x
+    } else { //斜率k大于1的时候，遍历y，根据e的符号来判断是否增加x
         k = 1 / k;
         for (var i = 0; i <= dy; i++) {
             setPixel(x, y, color);
@@ -377,11 +382,11 @@ function BresenhamLine(x0, y0, x1, y1, color) {
 //Bresenham改进扫描线转换：使用整数替代浮点运算
 function IntergerBresenhamLine(x0, y0, x1, y1, color) {
     var x, y, dx, dy, e;
-    var xIncrement = (x1 - x0) > 0 ? 1 : -1;//根据dx的符号来判断x每次的增量是1还是-1
-    var yIncrement = (y1 - y0) > 0 ? 1 : -1;//根据dy的符号来判断y每步的增量是1还是-1
+    var xIncrement = (x1 - x0) > 0 ? 1 : -1; //根据dx的符号来判断x每次的增量是1还是-1
+    var yIncrement = (y1 - y0) > 0 ? 1 : -1; //根据dy的符号来判断y每步的增量是1还是-1
     dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
     e = -dx, x = x0, y = y0;
-    if ((dy / dx) < 1) {//斜率k小于1的时候，遍历x，根据e的符号来判断是否增加y
+    if ((dy / dx) < 1) { //斜率k小于1的时候，遍历x，根据e的符号来判断是否增加y
         for (var i = 0; i <= dx; i++) {
             setPixel(x, y, color);
             x = x + xIncrement, e = e + 2 * dy;;
@@ -390,8 +395,7 @@ function IntergerBresenhamLine(x0, y0, x1, y1, color) {
                 e = e - 2 * dx;
             }
         }
-    }
-    else {//斜率k大于1的时候，遍历y，根据e的符号来判断是否增加x
+    } else { //斜率k大于1的时候，遍历y，根据e的符号来判断是否增加x
         for (var i = 0; i <= dy; i++) {
             setPixel(x, y, color);
             y = y + yIncrement, e = e + 2 * dx;
@@ -419,7 +423,7 @@ function setPixel(x, y, color, size) {
     point(x, workH - y);
 }
 
-function getPixelHex(x, y) {//返回像素颜色的hex值
+function getPixelHex(x, y) { //返回像素颜色的hex值
     var clr;
     clr = get(x, workH - y);
     var pixelColor = "#";

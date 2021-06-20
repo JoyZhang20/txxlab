@@ -9,7 +9,7 @@
 
 </head>
 
-<body onmousedown="mouseListener(event)">
+<body onmousedown="mouseListener(event)" onmousemove="mouseOverListener(event)">
     <div class="bt-div" style="width: 500px;position:relative;float: left">
         <input type="button" value="清空画布" onclick="clearWorkArea()">
         <hr>
@@ -22,10 +22,10 @@
         <input type="button" value="扫描线算法:将扫描线转换为多边形" onclick="useScanPolyFill()">
         <input type="button" value="种子递归的区域填充" onclick="useFloodFill4()">
         <hr>
-        <p style="font-size:13px">在画布内用鼠标创建若干个点，最后一个点会作为待判断的点</p>
+        <p style="font-size:13px">先使用扫描线算法创建一个多边形，再在画布内点击一个点判断其是否在多边形内</p>
         <input type="button" value="弧长累进算法：判断点与多边形关系" onclick="usePointPosition()">
         <hr>
-        <p style="font-size:13px">先使用扫描线算法创建一个多边形，再在画布内点击一个点</p>
+        <p style="font-size:13px">在画布内单击三个点，即可构造出二阶贝塞尔曲线</p>
         <input type="button" value="De Casteljau算法：二阶Bezier曲线的实现" onclick="useDoubleBezier()">
         <hr>
         <p style="font-size:13px">颜色模型实验</p>
@@ -36,7 +36,7 @@
         <p style="font-size:13px">三维物体实验</p>
         <input type="button" value="Three.js：构建一个魔方" onclick="useThree()">
         <br />
-        
+
     </div>
     <div id="tip" style="position:relative;float: left;margin-left: 100px;margin-top: 20px;"></div>
 </body>
